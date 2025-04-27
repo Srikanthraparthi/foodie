@@ -1,0 +1,28 @@
+.food-img {
+    height: 200px;
+    object-fit: cover;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .food-card:hover .food-img {
+    transform: scale(1.03);
+  }
+  
+  .food-card {
+    transition: all 0.3s ease-in-out;
+    border-radius: 1.5rem !important;
+  }
+  
+  .food-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(90deg, #ff8a00, #e52e71);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+  }
+  

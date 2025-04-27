@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './FoodList.css';
 
 function FoodList({ addToOrder }) {
   const [foods, setFoods] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [addedItems, setAddedItems] = useState({});
 
   useEffect(() => {
-    // Fetch food data from TheMealDB
     axios.get('https://www.themealdb.com/api/json/v1/1/search.php?f=c')
       .then(response => {
         const meals = response.data.meals || [];
 
-        // Classify as Veg or Non-Veg manually (basic keyword check)
         const processedMeals = meals.map(meal => {
           const lowerDesc = meal.strInstructions?.toLowerCase() || "";
           const isNonVeg = /chicken|meat|fish|beef|mutton/.test(lowerDesc);
@@ -44,6 +44,12 @@ function FoodList({ addToOrder }) {
     const quantity = quantities[food.id] || 1;
     addToOrder({ ...food, quantity });
     setQuantities(prev => ({ ...prev, [food.id]: 1 }));
+    
+    setAddedItems(prev => ({ ...prev, [food.id]: true }));
+
+    setTimeout(() => {
+      setAddedItems(prev => ({ ...prev, [food.id]: false }));
+    }, 2000); // Reset after 2 seconds
   };
 
   const filteredFoods = selectedCategory === 'All'
@@ -52,14 +58,15 @@ function FoodList({ addToOrder }) {
 
   return (
     <div className="container mt-5">
-      <h2 className="text-center mb-4 text-primary fw-bold">🍽️ Available Food</h2>
+      <h2 className="text-center mb-4 text-dark fw-bold display-5 gradient-text">
+        🍽️ Choose Your Favorite Meals
+      </h2>
 
-      {/* Category Filter Buttons */}
-      <div className="d-flex justify-content-center mb-4">
+      <div className="d-flex justify-content-center mb-4 gap-3 flex-wrap">
         {['All', 'Veg', 'Non-Veg'].map(cat => (
           <button
             key={cat}
-            className={`btn me-2 ${selectedCategory === cat ? 'btn-primary' : 'btn-outline-primary'}`}
+            className={`btn px-4 py-2 rounded-pill fw-medium shadow-sm ${selectedCategory === cat ? 'btn-dark' : 'btn-outline-dark'}`}
             onClick={() => setSelectedCategory(cat)}
           >
             {cat}
@@ -72,42 +79,49 @@ function FoodList({ addToOrder }) {
           <p className="text-center text-muted">No food items in this category.</p>
         ) : (
           filteredFoods.map(food => (
-            <div key={food.id} className="col-md-4 mb-4">
-              <div className="card shadow border-0 rounded-4">
+            <div key={food.id} className="col-lg-4 col-md-6 mb-4">
+              <div className="card food-card shadow border-0 rounded-4 h-100 animate-card">
                 <img
                   src={food.image}
                   alt={food.name}
-                  className="card-img-top"
-                  style={{ height: '200px', objectFit: 'cover', borderTopLeftRadius: '1rem', borderTopRightRadius: '1rem' }}
+                  className="card-img-top food-img"
                 />
-                <div className="card-body text-center">
-                  <h5 className="card-title fw-semibold">{food.name}</h5>
+                <div className="card-body d-flex flex-column justify-content-between text-center">
+                  <h5 className="fw-bold mb-1">{food.name}</h5>
+                  <span className={`badge px-3 py-2 mb-2 rounded-pill ${food.category === 'Veg' ? 'bg-success' : 'bg-danger'}`}>
+                    {food.category}
+                  </span>
                   <p className="text-muted small">{food.description}</p>
-                  {/* Changed the price currency to INR (₹) */}
-                  <p className="card-text fs-5 fw-bold text-success">₹{food.price}</p>
+                  <p className="fs-5 fw-bold text-success mb-3">₹{food.price}</p>
 
-                  <div className="d-flex justify-content-center align-items-center mb-3">
+                  <div className="d-flex justify-content-between align-items-center mt-auto">
+                    <div className="d-flex align-items-center gap-2">
+                      <button
+                        className="btn btn-outline-danger btn-sm rounded-circle"
+                        onClick={() => handleQuantityChange(food.id, -1)}
+                      >
+                        <i className="bi bi-dash-lg"></i>
+                      </button>
+                      <span className="fs-5">{quantities[food.id] || 1}</span>
+                      <button
+                        className="btn btn-outline-primary btn-sm rounded-circle"
+                        onClick={() => handleQuantityChange(food.id, 1)}
+                      >
+                        <i className="bi bi-plus-lg"></i>
+                      </button>
+                    </div>
                     <button
-                      className="btn btn-outline-danger btn-sm rounded-circle me-2 px-3"
-                      onClick={() => handleQuantityChange(food.id, -1)}
+                      className={`btn fw-bold px-4 rounded-pill ${addedItems[food.id] ? 'btn-success' : 'btn-warning'}`}
+                      onClick={() => handleAddToOrder(food)}
+                      disabled={addedItems[food.id]}
                     >
-                      <i className="bi bi-dash-lg"></i>
-                    </button>
-                    <span className="fs-5 fw-medium">{quantities[food.id] || 1}</span>
-                    <button
-                      className="btn btn-outline-primary btn-sm rounded-circle ms-2 px-3"
-                      onClick={() => handleQuantityChange(food.id, 1)}
-                    >
-                      <i className="bi bi-plus-lg"></i>
+                      {addedItems[food.id] ? (
+                        <><i className="bi bi-check-circle me-1"></i> Added</>
+                      ) : (
+                        <><i className="bi bi-cart-plus me-1"></i> Order</>
+                      )}
                     </button>
                   </div>
-
-                  <button
-                    className="btn btn-success w-100 rounded-pill"
-                    onClick={() => handleAddToOrder(food)}
-                  >
-                    <i className="bi bi-cart-plus me-2"></i>Add to Order
-                  </button>
                 </div>
               </div>
             </div>
